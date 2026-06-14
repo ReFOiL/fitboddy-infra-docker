@@ -1,0 +1,196 @@
+name: fitboddy
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-fitboddy}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fitboddy_local_dev}
+      POSTGRES_DB: ${POSTGRES_DEFAULT_DB:-fitboddy}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fitboddy} -d ${POSTGRES_DEFAULT_DB:-fitboddy}"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-redis_local_dev}"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD:-redis_local_dev} ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:RELEASE.2025-01-20T14-49-07Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-fitboddy_s3}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-fitboddy_s3_local_dev}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
+  minio-init:
+    image: minio/mc:RELEASE.2025-02-15T10-36-16Z
+    depends_on:
+      minio:
+        condition: service_started
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 ${S3_ACCESS_KEY:-fitboddy_s3} ${S3_SECRET_KEY:-fitboddy_s3_local_dev}; do sleep 2; done &&
+      mc mb --ignore-existing local/${S3_BUCKET:-fitboddy-media}
+      "
+    restart: "no"
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fitboddy}:${POSTGRES_PASSWORD:-fitboddy_local_dev}@postgres:5432/fitboddy_auth
+      JWT_SECRET: ${JWT_SECRET:-auth_service_dev_secret_change_me}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_TTL_MINUTES: ${ACCESS_TOKEN_TTL_MINUTES:-15}
+      REFRESH_TOKEN_TTL_MINUTES: ${REFRESH_TOKEN_TTL_MINUTES:-10080}
+      TENANT_SERVICE_URL: http://tenant-service:8000
+      HTTP_TIMEOUT_SECONDS: ${HTTP_TIMEOUT_SECONDS:-5}
+      MARKETPLACE_PROFILE_SYNC_ENABLED: ${MARKETPLACE_PROFILE_SYNC_ENABLED:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      tenant-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  tenant-service:
+    build:
+      context: ./services/tenant-service
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fitboddy}:${POSTGRES_PASSWORD:-fitboddy_local_dev}@postgres:5432/fitboddy_tenant
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  profile-service:
+    build:
+      context: ./services/profile-service
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fitboddy}:${POSTGRES_PASSWORD:-fitboddy_local_dev}@postgres:5432/fitboddy_profile
+      AUTH_SERVICE_URL: http://auth-service:8000
+      TENANT_SERVICE_URL: http://tenant-service:8000
+      HTTP_TIMEOUT_SECONDS: ${HTTP_TIMEOUT_SECONDS:-5}
+      S3_MEDIA_ENABLED: "true"
+      S3_ENDPOINT: minio:9000
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-fitboddy_s3}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-fitboddy_s3_local_dev}
+      S3_BUCKET: ${S3_BUCKET:-fitboddy-media}
+      S3_SECURE: "false"
+      S3_PUBLIC_BASE_URL: ${S3_PUBLIC_BASE_URL:-http://localhost:9000}
+      S3_AVATARS_PREFIX: avatars/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      auth-service:
+        condition: service_started
+      tenant-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  plan-service:
+    build:
+      context: ./services/plan-service
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fitboddy}:${POSTGRES_PASSWORD:-fitboddy_local_dev}@postgres:5432/fitboddy_plan
+      PROFILE_SERVICE_URL: http://profile-service:8000
+      REQUIRE_PROFILE_COMPLETION: ${REQUIRE_PROFILE_COMPLETION:-true}
+      HTTP_TIMEOUT_SECONDS: ${HTTP_TIMEOUT_SECONDS:-5}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      profile-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  fitboddy-admin:
+    build:
+      context: ./fitboddy-admin
+    environment:
+      VITE_PLATFORM_API_URL: ""
+    depends_on:
+      auth-service:
+        condition: service_started
+      tenant-service:
+        condition: service_started
+      profile-service:
+        condition: service_started
+      plan-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  gateway:
+    image: nginx:1.27-alpine
+    depends_on:
+      fitboddy-admin:
+        condition: service_started
+      auth-service:
+        condition: service_started
+      tenant-service:
+        condition: service_started
+      profile-service:
+        condition: service_started
+      plan-service:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./infra/docker/gateway/default.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:

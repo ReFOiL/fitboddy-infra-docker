@@ -1,0 +1,20 @@
+services:
+  auth-service:
+    image: ghcr.io/${GHCR_OWNER:?set GHCR_OWNER}/auth-service:${IMAGE_TAG:-latest}
+    build: null
+
+  tenant-service:
+    image: ghcr.io/${GHCR_OWNER:?set GHCR_OWNER}/tenant-service:${IMAGE_TAG:-latest}
+    build: null
+
+  profile-service:
+    image: ghcr.io/${GHCR_OWNER:?set GHCR_OWNER}/profile-service:${IMAGE_TAG:-latest}
+    build: null
+
+  plan-service:
+    image: ghcr.io/${GHCR_OWNER:?set GHCR_OWNER}/plan-service:${IMAGE_TAG:-latest}
+    build: null
+
+  fitboddy-admin:
+    image: ghcr.io/${GHCR_OWNER:?set GHCR_OWNER}/fitboddy-admin:${IMAGE_TAG:-latest}
+    build: null
