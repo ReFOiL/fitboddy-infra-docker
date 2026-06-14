@@ -25,3 +25,30 @@ jobs:
             docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.ghcr.yml pull
             docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.ghcr.yml up -d
             docker image prune -f
+name: Deploy with Docker Compose
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to deploy"
+        required: true
+        default: "latest"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /opt/fitboddy
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
+            export IMAGE_TAG=${{ inputs.image_tag }}
+            docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.ghcr.yml pull
+            docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.ghcr.yml up -d
+            docker image prune -f
