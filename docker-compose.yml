@@ -56,7 +56,7 @@ services:
 
   auth-service:
     build:
-      context: ./services/auth-service
+      context: ../fitboddy-auth-service
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fitboddy}:${POSTGRES_PASSWORD:-fitboddy_local_dev}@postgres:5432/fitboddy_auth
       JWT_SECRET: ${JWT_SECRET:-auth_service_dev_secret_change_me}
@@ -80,7 +80,7 @@ services:
 
   tenant-service:
     build:
-      context: ./services/tenant-service
+      context: ../fitboddy-tenant-service
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fitboddy}:${POSTGRES_PASSWORD:-fitboddy_local_dev}@postgres:5432/fitboddy_tenant
     depends_on:
@@ -95,7 +95,7 @@ services:
 
   profile-service:
     build:
-      context: ./services/profile-service
+      context: ../fitboddy-profile-service
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fitboddy}:${POSTGRES_PASSWORD:-fitboddy_local_dev}@postgres:5432/fitboddy_profile
       AUTH_SERVICE_URL: http://auth-service:8000
@@ -127,7 +127,7 @@ services:
 
   plan-service:
     build:
-      context: ./services/plan-service
+      context: ../fitboddy-plan-service
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fitboddy}:${POSTGRES_PASSWORD:-fitboddy_local_dev}@postgres:5432/fitboddy_plan
       PROFILE_SERVICE_URL: http://profile-service:8000
@@ -147,7 +147,7 @@ services:
 
   fitboddy-admin:
     build:
-      context: ./fitboddy-admin
+      context: ../fitboddy-admin-frontend
     environment:
       VITE_PLATFORM_API_URL: ""
     depends_on:
