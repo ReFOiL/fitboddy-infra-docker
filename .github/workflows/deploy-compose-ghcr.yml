@@ -19,7 +19,7 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            cd /opt/fitboddy
+            cd /opt/fitboddy/fitboddy-infra-docker
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
             export IMAGE_TAG=${{ inputs.image_tag }}
             docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.ghcr.yml pull
