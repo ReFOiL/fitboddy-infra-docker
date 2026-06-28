@@ -22,6 +22,28 @@ jobs:
             cd /opt/fitboddy/fitboddy-infra-docker
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
             export IMAGE_TAG=${{ inputs.image_tag }}
-            docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.ghcr.yml pull
-            docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.ghcr.yml up -d
+            compose() {
+              docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.ghcr.yml "$@"
+            }
+            run_migration() {
+              service="$1"
+              attempt=1
+              max_attempts=10
+              while ! compose run --rm --no-deps "$service" poetry run alembic upgrade head; do
+                if [ "$attempt" -ge "$max_attempts" ]; then
+                  echo "Migration failed for $service after $max_attempts attempts"
+                  return 1
+                fi
+                attempt=$((attempt + 1))
+                echo "Retrying migration for $service ($attempt/$max_attempts) in 5s..."
+                sleep 5
+              done
+            }
+            compose pull
+            compose up -d postgres
+            run_migration auth-service
+            run_migration tenant-service
+            run_migration profile-service
+            run_migration plan-service
+            compose up -d
             docker image prune -f

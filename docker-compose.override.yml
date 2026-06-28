@@ -1,7 +1,41 @@
 services:
+  auth-service:
+    volumes:
+      - ../fitboddy-auth-service:/app
+    command: >-
+      poetry run uvicorn --app-dir /app/lib presentation.http.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/lib
+    environment:
+      WATCHFILES_FORCE_POLLING: "true"
+
+  tenant-service:
+    volumes:
+      - ../fitboddy-tenant-service:/app
+    command: >-
+      poetry run uvicorn --app-dir /app/lib presentation.http.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/lib
+    environment:
+      WATCHFILES_FORCE_POLLING: "true"
+
+  profile-service:
+    volumes:
+      - ../fitboddy-profile-service:/app
+    command: >-
+      poetry run uvicorn --app-dir /app/lib presentation.http.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/lib
+    environment:
+      WATCHFILES_FORCE_POLLING: "true"
+
+  plan-service:
+    volumes:
+      - ../fitboddy-plan-service:/app
+    command: >-
+      poetry run uvicorn --app-dir /app/lib presentation.http.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/lib
+    environment:
+      WATCHFILES_FORCE_POLLING: "true"
+
   fitboddy-admin:
-    build: null
-    image: node:22-alpine
+    build:
+      context: ../fitboddy-admin-frontend
+      dockerfile: Dockerfile.dev
+    image: fitboddy-admin-dev:local
     working_dir: /app
     command: >-
       sh -c "npm ci && npm run dev -- --host 0.0.0.0 --port 8080 --strictPort"
