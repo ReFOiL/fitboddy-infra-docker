@@ -20,3 +20,23 @@ docker compose --env-file .env.docker up -d
 - `fitboddy-admin-frontend`
 
 Тогда `docker-compose.yml` соберет сервисы из соседних директорий.
+
+## Отдельный контур: Progress Tracker
+
+Для полностью изолированного сервиса личных отметок (не влияет на основной продукт) используй:
+
+```bash
+cp .env.checkins.example .env.checkins
+docker compose --env-file .env.checkins -f docker-compose.checkins.yml up -d --build
+```
+
+После запуска:
+
+- сайт: `http://localhost:8090`
+- health: `http://localhost:8090/health`
+
+Остановить только этот контур:
+
+```bash
+docker compose --env-file .env.checkins -f docker-compose.checkins.yml down
+```
