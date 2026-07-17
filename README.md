@@ -18,8 +18,23 @@ docker compose --env-file .env.docker up -d
 - `fitboddy-profile-service`
 - `fitboddy-plan-service`
 - `fitboddy-admin-frontend`
+- `fitboddy-support-frontend`
 
 Тогда `docker-compose.yml` соберет сервисы из соседних директорий.
+
+После запуска основного стека:
+
+- продукт: `http://localhost:8080`
+- support console: `http://support.localhost:8080` (добавь `127.0.0.1 support.localhost` в hosts)
+- health: `http://localhost:8080/health`
+
+Bootstrap первого `platform_admin` задаётся в `.env.docker`:
+
+```env
+PLATFORM_ADMIN_LOGIN=platform_admin
+PLATFORM_ADMIN_PASSWORD=change_me_platform_admin
+PLATFORM_ADMIN_EMAIL=admin@fitboddy.local
+```
 
 ## Отдельный контур: Progress Tracker
 

@@ -18,3 +18,7 @@ services:
   fitboddy-admin:
     image: ghcr.io/${GHCR_OWNER:?set GHCR_OWNER}/fitboddy-admin-frontend:${IMAGE_TAG:-latest}
     build: null
+
+  fitboddy-support:
+    image: ghcr.io/${GHCR_OWNER:?set GHCR_OWNER}/fitboddy-support-frontend:${IMAGE_TAG:-latest}
+    build: null
