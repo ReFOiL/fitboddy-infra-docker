@@ -85,6 +85,13 @@ location ^~ /api/v1/plans {
     proxy_set_header X-Forwarded-Proto $scheme;
 }
 
+location ^~ /api/v1/muscles {
+    proxy_pass http://plan-service:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
 location ^~ /api/v1/platform-exercises {
     proxy_pass http://plan-service:8000;
     proxy_set_header Host $host;
