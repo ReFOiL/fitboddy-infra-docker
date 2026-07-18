@@ -28,6 +28,8 @@ docker compose --env-file .env.docker up -d
 - support console: `http://support.localhost:8080` (добавь `127.0.0.1 support.localhost` в hosts)
 - health: `http://localhost:8080/health`
 
+Локально `docker-compose.override.yml` поднимает `fitboddy-admin` и `fitboddy-support` на Vite с hot-reload (исходники монтируются с хоста).
+
 Bootstrap первого `platform_admin` задаётся в `.env.docker`:
 
 ```env

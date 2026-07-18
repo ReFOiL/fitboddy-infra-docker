@@ -40,7 +40,8 @@ services:
     command: >-
       sh -c "npm ci && npm run dev -- --host 0.0.0.0 --port 8080 --strictPort"
     environment:
-      VITE_PLATFORM_API_URL: http://localhost:8080
+      # Empty = same-origin relative API via gateway (avoids CORS on localhost/127.0.0.1/support.localhost).
+      VITE_PLATFORM_API_URL: ""
       CHOKIDAR_USEPOLLING: "true"
     volumes:
       - ../fitboddy-admin-frontend:/app
@@ -51,5 +52,27 @@ services:
       timeout: 5s
       retries: 20
 
+  fitboddy-support:
+    build:
+      context: ../fitboddy-support-frontend
+      dockerfile: Dockerfile.dev
+    image: fitboddy-support-dev:local
+    working_dir: /app
+    command: >-
+      sh -c "npm ci && npm run dev -- --host 0.0.0.0 --port 8080 --strictPort"
+    environment:
+      # Empty = same-origin relative API via gateway (avoids CORS on localhost/127.0.0.1/support.localhost).
+      VITE_PLATFORM_API_URL: ""
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ../fitboddy-support-frontend:/app
+      - fitboddy_support_node_modules:/app/node_modules
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
 volumes:
   fitboddy_admin_node_modules:
+  fitboddy_support_node_modules:
