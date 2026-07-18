@@ -33,7 +33,7 @@ Bootstrap первого `platform_admin` задаётся в `.env.docker`:
 ```env
 PLATFORM_ADMIN_LOGIN=platform_admin
 PLATFORM_ADMIN_PASSWORD=change_me_platform_admin
-PLATFORM_ADMIN_EMAIL=admin@fitboddy.local
+PLATFORM_ADMIN_EMAIL=admin@fitboddy.dev
 ```
 
 ## Отдельный контур: Progress Tracker
