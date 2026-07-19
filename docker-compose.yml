@@ -134,6 +134,7 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fitboddy}:${POSTGRES_PASSWORD:-fitboddy_local_dev}@postgres:5432/fitboddy_plan
       PROFILE_SERVICE_URL: http://profile-service:8000
+      TENANT_SERVICE_URL: http://tenant-service:8000
       AUTH_SERVICE_URL: http://auth-service:8000
       REQUIRE_PROFILE_COMPLETION: ${REQUIRE_PROFILE_COMPLETION:-true}
       HTTP_TIMEOUT_SECONDS: ${HTTP_TIMEOUT_SECONDS:-5}
@@ -148,6 +149,8 @@ services:
       postgres:
         condition: service_healthy
       profile-service:
+        condition: service_started
+      tenant-service:
         condition: service_started
       minio:
         condition: service_started
