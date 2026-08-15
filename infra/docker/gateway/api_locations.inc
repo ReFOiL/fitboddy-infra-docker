@@ -71,6 +71,11 @@ location ^~ /api/v1/admin/generation-policy {
     proxy_set_header X-Forwarded-Proto $scheme;
 }
 
+location ^~ /api/v1/profiles/internal {
+    default_type application/json;
+    return 403 '{"detail":"internal endpoint is not exposed"}';
+}
+
 location ^~ /api/v1/profiles {
     proxy_pass http://profile-service:8000;
     proxy_set_header Host $host;

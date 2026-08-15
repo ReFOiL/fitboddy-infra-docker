@@ -17,15 +17,15 @@
 
 ## 1) Security и корректность текущих сервисов
 
-- [ ] `AUTH-P0-1` Добавить `UNIQUE` constraint на email в `auth-service` и миграцию.
-- [ ] `AUTH-P0-2` Закрыть race-condition регистрации (тест на параллельную регистрацию).
-- [ ] `TENANT-P0-1` Убрать impersonation через `acting_user_id`, actor брать из валидного токена.
-- [ ] `TENANT-P0-2` Добавить server-side ACL на все write-операции связей trainer-client.
-- [ ] `TENANT-P0-3` Перевести списки тренеров/клиентов на DB-pagination (без full in-memory scan).
-- [ ] `PROFILE-P0-1` Закрыть internal endpoints service-auth механизмом (service token/mTLS).
-- [ ] `PROFILE-P0-2` Защитить раздачу медиа (signed URL или контролируемый proxy policy).
-- [ ] `PLAN-P0-1` Добавить role-aware доступ к планам/каталогу (только разрешенные участники).
-- [ ] `PLAN-P0-2` Ввести инвариант одной активной записи плана на пользователя.
+- [x] `AUTH-P0-1` Добавить `UNIQUE` constraint на email в `auth-service` и миграцию.
+- [x] `AUTH-P0-2` Закрыть race-condition регистрации (тест на параллельную регистрацию).
+- [x] `TENANT-P0-1` Убрать impersonation через `acting_user_id`, actor брать из валидного токена.
+- [x] `TENANT-P0-2` Добавить server-side ACL на все write-операции связей trainer-client.
+- [x] `TENANT-P0-3` Перевести списки тренеров/клиентов на DB-pagination (без full in-memory scan).
+- [x] `PROFILE-P0-1` Закрыть internal endpoints service-auth механизмом (service token/mTLS).
+- [x] `PROFILE-P0-2` Защитить раздачу медиа (signed URL или контролируемый proxy policy).
+- [x] `PLAN-P0-1` Добавить role-aware доступ к планам/каталогу (только разрешенные участники).
+- [x] `PLAN-P0-2` Ввести инвариант одной активной записи плана на пользователя.
 
 ## 2) Billing core (новый обязательный контур)
 
