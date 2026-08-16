@@ -86,6 +86,7 @@ services:
       context: ../fitboddy-tenant-service
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fitboddy}:${POSTGRES_PASSWORD:-fitboddy_local_dev}@postgres:5432/fitboddy_tenant
+      AUTH_SERVICE_URL: http://auth-service:8000
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-fitboddy_internal_dev}
     depends_on:
       postgres:
@@ -119,6 +120,32 @@ services:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
+      auth-service:
+        condition: service_started
+      tenant-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  messaging-service:
+    build:
+      context: ../fitboddy-messaging-service
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fitboddy}:${POSTGRES_PASSWORD:-fitboddy_local_dev}@postgres:5432/fitboddy_messaging
+      AUTH_SERVICE_URL: http://auth-service:8000
+      TENANT_SERVICE_URL: http://tenant-service:8000
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-fitboddy_internal_dev}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_local_dev}@redis:6379/0
+      HTTP_TIMEOUT_SECONDS: ${HTTP_TIMEOUT_SECONDS:-5}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
       auth-service:
         condition: service_started
       tenant-service:
@@ -178,6 +205,8 @@ services:
         condition: service_started
       plan-service:
         condition: service_started
+      messaging-service:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
       interval: 10s
@@ -220,6 +249,8 @@ services:
       profile-service:
         condition: service_started
       plan-service:
+        condition: service_started
+      messaging-service:
         condition: service_started
     ports:
       - "8080:8080"

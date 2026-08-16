@@ -17,6 +17,7 @@ docker compose --env-file .env.docker up -d
 - `fitboddy-tenant-service`
 - `fitboddy-profile-service`
 - `fitboddy-plan-service`
+- `fitboddy-messaging-service`
 - `fitboddy-admin-frontend`
 - `fitboddy-support-frontend`
 

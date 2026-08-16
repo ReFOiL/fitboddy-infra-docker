@@ -31,6 +31,14 @@ services:
     environment:
       WATCHFILES_FORCE_POLLING: "true"
 
+  messaging-service:
+    volumes:
+      - ../fitboddy-messaging-service:/app
+    command: >-
+      poetry run uvicorn --app-dir /app/lib presentation.http.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/lib
+    environment:
+      WATCHFILES_FORCE_POLLING: "true"
+
   fitboddy-admin:
     build:
       context: ../fitboddy-admin-frontend

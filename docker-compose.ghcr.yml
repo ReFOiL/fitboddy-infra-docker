@@ -15,6 +15,10 @@ services:
     image: ghcr.io/${GHCR_OWNER:?set GHCR_OWNER}/fitboddy-plan-service:${IMAGE_TAG:-latest}
     build: null
 
+  messaging-service:
+    image: ghcr.io/${GHCR_OWNER:?set GHCR_OWNER}/fitboddy-messaging-service:${IMAGE_TAG:-latest}
+    build: null
+
   fitboddy-admin:
     image: ghcr.io/${GHCR_OWNER:?set GHCR_OWNER}/fitboddy-admin-frontend:${IMAGE_TAG:-latest}
     build: null

@@ -115,11 +115,28 @@ location ^~ /api/v1/trainers {
     proxy_send_timeout 300s;
 }
 
+location ^~ /api/v1/marketplace/internal {
+    default_type application/json;
+    return 403 '{"detail":"internal endpoint is not exposed"}';
+}
+
 location ^~ /api/v1/marketplace {
     proxy_pass http://tenant-service:8000;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+location ^~ /api/v1/messages {
+    proxy_pass http://messaging-service:8000;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
 }
 
 location ^~ /api/v1/tenants {
