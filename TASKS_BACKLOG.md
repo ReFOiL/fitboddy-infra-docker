@@ -80,7 +80,7 @@
 - [ ] `INFRA-P0-2` Добавить post-deploy smoke checks (auth, tenant, profile, plan, billing webhook, notification delivery).
 - [ ] `INFRA-P0-3` Убрать продовый default на `latest`, использовать pinned image tags.
 - [ ] `INFRA-P0-4` Поднять TLS на внешнем периметре.
-- [ ] `INFRA-P0-5` Закрыть внешний доступ к MinIO admin/data портам.
+- [x] `INFRA-P0-5` Закрыть внешний доступ к MinIO admin/data портам.
 - [ ] `INFRA-P0-6` Настроить backup/restore для Postgres и MinIO.
 
 
