@@ -1,5 +1,8 @@
 name: fitboddy
 
+# minio-init использует тот же образ: в нём уже есть mc (/usr/bin/mc).
+x-minio-image: &minio-image minio/minio:RELEASE.2025-01-20T14-49-07Z
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -30,7 +33,7 @@ services:
     restart: unless-stopped
 
   minio:
-    image: minio/minio:RELEASE.2025-01-20T14-49-07Z
+    image: *minio-image
     command: server /data --console-address ":9001"
     environment:
       # Root только у процесса MinIO. Сервисы ходят отдельными ключами из minio-init.
@@ -42,7 +45,7 @@ services:
     restart: unless-stopped
 
   minio-init:
-    image: minio/mc:RELEASE.2025-02-15T10-36-16Z
+    image: *minio-image
     depends_on:
       minio:
         condition: service_started
