@@ -46,8 +46,18 @@ location ^~ /api/v1/admin/exercises {
     proxy_set_header X-Forwarded-Proto $scheme;
 }
 
-location ^~ /api/v1/admin/platform-exercises {
-    client_max_body_size 200m;
+# Фото платформенных упражнений: лимит приложения 15 МБ, небольшой запас на multipart.
+location ~ ^/api/v1/admin/platform-exercises/[^/]+/photos(/|$) {
+    client_max_body_size 16m;
+    proxy_pass http://plan-service:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+# Видео платформенных упражнений: лимит приложения 200 МБ плюс запас на multipart.
+location ~ ^/api/v1/admin/platform-exercises/[^/]+/video(/|$) {
+    client_max_body_size 210m;
     proxy_pass http://plan-service:8000;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -55,6 +65,13 @@ location ^~ /api/v1/admin/platform-exercises {
     proxy_request_buffering off;
     proxy_read_timeout 300s;
     proxy_send_timeout 300s;
+}
+
+location /api/v1/admin/platform-exercises {
+    proxy_pass http://plan-service:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
 }
 
 location ^~ /api/v1/admin/plans {
@@ -76,7 +93,25 @@ location ^~ /api/v1/profiles/internal {
     return 403 '{"detail":"internal endpoint is not exposed"}';
 }
 
-location ^~ /api/v1/profiles {
+# Аватар: лимит приложения 5 МБ, запас на multipart.
+location ~ ^/api/v1/profiles/[^/]+/avatar/?$ {
+    client_max_body_size 8m;
+    proxy_pass http://profile-service:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+# Файл аватара: не даём браузеру подменять Content-Type.
+location ^~ /api/v1/profiles/media/ {
+    proxy_pass http://profile-service:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    add_header X-Content-Type-Options nosniff always;
+}
+
+location /api/v1/profiles {
     proxy_pass http://profile-service:8000;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -104,8 +139,18 @@ location ^~ /api/v1/platform-exercises {
     proxy_set_header X-Forwarded-Proto $scheme;
 }
 
-location ^~ /api/v1/trainers {
-    client_max_body_size 200m;
+# Фото упражнений тренера: лимит приложения 15 МБ, небольшой запас на multipart.
+location ~ ^/api/v1/trainers/[^/]+/exercises/[^/]+/photos(/|$) {
+    client_max_body_size 16m;
+    proxy_pass http://plan-service:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+# Видео упражнений тренера: лимит приложения 200 МБ плюс запас на multipart.
+location ~ ^/api/v1/trainers/[^/]+/exercises/[^/]+/video(/|$) {
+    client_max_body_size 210m;
     proxy_pass http://plan-service:8000;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -113,6 +158,22 @@ location ^~ /api/v1/trainers {
     proxy_request_buffering off;
     proxy_read_timeout 300s;
     proxy_send_timeout 300s;
+}
+
+# Байты фото и видео упражнений.
+location ^~ /api/v1/trainers/media/ {
+    proxy_pass http://plan-service:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    add_header X-Content-Type-Options nosniff always;
+}
+
+location /api/v1/trainers {
+    proxy_pass http://plan-service:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
 }
 
 location ^~ /api/v1/marketplace/internal {
