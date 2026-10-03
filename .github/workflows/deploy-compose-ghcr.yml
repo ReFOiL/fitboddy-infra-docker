@@ -19,6 +19,8 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
+            # Первая ошибка останавливает деплой: упавший pull не доходит до миграций и up.
+            set -eu
             cd /opt/fitboddy/fitboddy-infra-docker
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
             export IMAGE_TAG=${{ inputs.image_tag }}
@@ -39,7 +41,19 @@ jobs:
                 sleep 5
               done
             }
-            compose pull
+            # minio/minio закреплён и уже лежит на сервере. Docker Hub этот репозиторий
+            # не отдаёт, поэтому pull minio/minio-init роняет весь деплой ещё до образов приложения.
+            compose pull \
+              postgres \
+              redis \
+              gateway \
+              auth-service \
+              tenant-service \
+              profile-service \
+              plan-service \
+              messaging-service \
+              fitboddy-admin \
+              fitboddy-support
             compose up -d postgres
             run_migration auth-service
             run_migration tenant-service

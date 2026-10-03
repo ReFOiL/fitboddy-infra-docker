@@ -14,6 +14,8 @@ S3_PLAN_ACCESS_KEY="${S3_PLAN_ACCESS_KEY:?S3_PLAN_ACCESS_KEY is required}"
 S3_PLAN_SECRET_KEY="${S3_PLAN_SECRET_KEY:?S3_PLAN_SECRET_KEY is required}"
 POLICY_DIR="${POLICY_DIR:-/policies}"
 
+# mc поставляется в образе minio/minio как /usr/bin/mc.
+export PATH="/usr/bin:${PATH:-/bin}"
 export MC_CONFIG_DIR="${MC_CONFIG_DIR:-/tmp/mc}"
 export MC_DISABLE_PAGER=1
 mkdir -p "$MC_CONFIG_DIR"
