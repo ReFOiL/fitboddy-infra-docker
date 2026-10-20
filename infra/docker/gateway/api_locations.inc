@@ -118,6 +118,12 @@ location /api/v1/profiles {
     proxy_set_header X-Forwarded-Proto $scheme;
 }
 
+# Confirm Telegram-кода живёт на plan-service и доступен только из docker-сети.
+location ^~ /api/v1/plans/internal {
+    default_type application/json;
+    return 403 '{"detail":"internal endpoint is not exposed"}';
+}
+
 location ^~ /api/v1/plans {
     proxy_pass http://plan-service:8000;
     proxy_set_header Host $host;
