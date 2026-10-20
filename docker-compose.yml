@@ -167,6 +167,7 @@ services:
     restart: unless-stopped
 
   plan-service:
+    image: fitboddy-plan-service:local
     build:
       context: ../fitboddy-plan-service
     environment:
@@ -188,6 +189,11 @@ services:
       MEDIA_URL_SIGNING_SECRET: ${MEDIA_URL_SIGNING_SECRET:-change_me_media_url_signing_secret}
       MEDIA_URL_TTL_SECONDS: ${MEDIA_URL_TTL_SECONDS:-300}
       INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-fitboddy_internal_dev}
+      # Тики только у plan-notifications-worker. Здесь планировщик выключен.
+      NOTIFICATIONS_SCHEDULER_ENABLED: "false"
+      NOTIFICATIONS_DEFAULT_TIMEZONE: ${NOTIFICATIONS_DEFAULT_TIMEZONE:-Asia/Vladivostok}
+      NOTIFICATIONS_PLAN_DEBOUNCE_SECONDS: ${NOTIFICATIONS_PLAN_DEBOUNCE_SECONDS:-900}
+      NOTIFICATIONS_LINK_CODE_TTL_SECONDS: ${NOTIFICATIONS_LINK_CODE_TTL_SECONDS:-900}
     depends_on:
       postgres:
         condition: service_healthy
@@ -202,6 +208,34 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
+    restart: unless-stopped
+
+  # Тот же образ, что plan-service. Порт наружу не публикуем: процесс только шлёт Telegram.
+  plan-notifications-worker:
+    image: fitboddy-plan-service:local
+    build:
+      context: ../fitboddy-plan-service
+    command: ["python", "-m", "presentation.notifications.worker"]
+    environment:
+      PYTHONPATH: /app/lib
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fitboddy}:${POSTGRES_PASSWORD:-fitboddy_local_dev}@postgres:5432/fitboddy_plan
+      AUTH_SERVICE_URL: http://auth-service:8000
+      HTTP_TIMEOUT_SECONDS: ${HTTP_TIMEOUT_SECONDS:-5}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_API_BASE: ${TELEGRAM_API_BASE:-https://api.telegram.org}
+      NOTIFICATIONS_SCHEDULER_ENABLED: "true"
+      NOTIFICATIONS_DEFAULT_TIMEZONE: ${NOTIFICATIONS_DEFAULT_TIMEZONE:-Asia/Vladivostok}
+      NOTIFICATIONS_MORNING_REMINDER: ${NOTIFICATIONS_MORNING_REMINDER:-09:00}
+      NOTIFICATIONS_REMINDER_LEAD_MINUTES: ${NOTIFICATIONS_REMINDER_LEAD_MINUTES:-120}
+      NOTIFICATIONS_PLAN_DEBOUNCE_SECONDS: ${NOTIFICATIONS_PLAN_DEBOUNCE_SECONDS:-900}
+      NOTIFICATIONS_PLAN_NOTICE_TTL_SECONDS: ${NOTIFICATIONS_PLAN_NOTICE_TTL_SECONDS:-604800}
+      NOTIFICATIONS_MISSED_LOOKBACK_DAYS: ${NOTIFICATIONS_MISSED_LOOKBACK_DAYS:-2}
+      NOTIFICATIONS_POLL_SECONDS: ${NOTIFICATIONS_POLL_SECONDS:-60}
+      NOTIFICATIONS_LINK_CODE_TTL_SECONDS: ${NOTIFICATIONS_LINK_CODE_TTL_SECONDS:-900}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-fitboddy_internal_dev}
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   fitboddy-admin:

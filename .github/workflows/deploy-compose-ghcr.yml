@@ -51,6 +51,7 @@ jobs:
               tenant-service \
               profile-service \
               plan-service \
+              plan-notifications-worker \
               messaging-service \
               fitboddy-admin \
               fitboddy-support
@@ -61,4 +62,7 @@ jobs:
             run_migration plan-service
             run_migration messaging-service
             compose up -d
+            # Тот же образ, что plan-service, но отдельный процесс. force-recreate
+            # перезапускает воркер на каждом деплое, даже если тег образа не сменился.
+            compose up -d --no-deps --force-recreate plan-notifications-worker
             docker image prune -f

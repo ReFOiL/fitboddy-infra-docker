@@ -31,6 +31,12 @@ services:
     environment:
       WATCHFILES_FORCE_POLLING: "true"
 
+  plan-notifications-worker:
+    volumes:
+      - ../fitboddy-plan-service:/app
+    environment:
+      PYTHONPATH: /app/lib
+
   messaging-service:
     volumes:
       - ../fitboddy-messaging-service:/app

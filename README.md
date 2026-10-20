@@ -87,6 +87,14 @@ Gateway режет размер тела запроса:
 
 Ответы `/api/v1/profiles/media/` и `/api/v1/trainers/media/` получают `X-Content-Type-Options: nosniff`.
 
+`POST /api/v1/plans/internal/notifications/telegram` (подтверждение кода привязки Telegram) gateway не проксирует: `location ^~ /api/v1/plans/internal` отвечает 403. Вызов идёт по docker-сети на `http://plan-service:8000` с `X-Service-Token`. Публичные `GET`/`PUT /api/v1/plans/me/notifications/...` по-прежнему идут через `/api/v1/plans`.
+
+## Уведомления о тренировках
+
+`plan-notifications-worker` — второй контейнер того же образа, что `plan-service`, команда `python -m presentation.notifications.worker`. Планировщик включён только там (`NOTIFICATIONS_SCHEDULER_ENABLED=true`). У API процесса то же значение `false`, чтобы тики не дублировались.
+
+Переменные и значения по умолчанию — в `.env.docker.example` (`TELEGRAM_BOT_TOKEN`, пояс, окно напоминания, debounce и т.д.). Пустой токен не роняет воркер: он просто ничего не отправляет. Деплой (`deploy-compose-ghcr.yml`) пулит этот сервис вместе с `plan-service` и пересоздаёт контейнер после `up`.
+
 ## Отдельный контур: Progress Tracker
 
 Для полностью изолированного сервиса личных отметок (не влияет на основной продукт) используй:
